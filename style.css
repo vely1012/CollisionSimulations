@@ -1,0 +1,210 @@
+body {
+    box-sizing: border-box;
+
+    padding: 20px;
+    margin: 0;
+
+    display: flex;
+    gap: 20px;
+
+    height: 100vh;
+    width: 100vw;
+
+    background-size: 100px 100px;
+}
+
+.tiles-bg {
+    overflow: hidden;
+
+    position: relative;
+}
+
+.tiles-bg:after {
+    content: "";
+
+    --angle: 340deg;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -10000;
+    transform: translate(-50%, -50%) rotate(calc(var(--angle)));
+
+    width: calc(100vw + 100vh);
+    height: calc(100vw + 100vh);
+
+
+    --width: 50px;
+    --height: 50px;
+    --color: #0005;
+    --gradient: linear-gradient(to top left, var(--color) 25.1%, transparent 0, transparent 74.9%, var(--color) 0);
+
+    background:
+        var(--gradient) 50% 50% / var(--width) var(--height),
+        var(--gradient) calc(var(--width) / 2 + 50%) calc(var(--height) / 2 + 50%) / var(--width) var(--height);
+
+    animation:
+        move-tiles 1.5s linear infinite;
+    /* change-angle 60s linear infinite; */ /* Please no, i'm Begging you */
+}
+
+@keyframes move-tiles {
+    from {
+        background:
+            var(--gradient) 50% 50% / var(--width) var(--height),
+            var(--gradient) calc(var(--width) / 2 + 50%) calc(var(--height) / 2 + 50%) / var(--width) var(--height);
+    }
+
+    to {
+        background:
+            var(--gradient) calc(50% + var(--width)) 50% / var(--width) var(--height),
+            var(--gradient) calc(var(--width) / 2 * 3 + 50%) calc(var(--height) / 2 + 50%) / var(--width) var(--height);
+    }
+}
+
+/* NEVER USE WITH move-tiles */
+/* @keyframes change-angle {
+    0% {
+        transform: translate(-50%, -50%) rotate(calc(var(--angle)));
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(calc(var(--angle) + 360deg));
+    }
+} */
+
+.bubble-simulation__heading {
+    width: fit-content;
+
+    padding: 0 20px;
+    margin: 20px auto;
+
+    text-align: center;
+
+    background-color: white;
+    border: 4px solid black;
+}
+
+.bubble-simulation {
+    height: 100%;
+
+    flex-basis: 50%;
+    display: flex;
+    flex-direction: column;
+}
+
+.bubbles-window {
+    position: relative;
+
+    flex-grow: 1;
+
+    --frame-w: 10px;
+
+    outline: var(--frame-w) solid var(--frame-col);
+
+    width: calc(100% - 2 * var(--frame-w));
+    flex-basis: calc(100% - 2 * var(--frame-w));
+
+    overflow: hidden;
+
+    transform: scale(1, -1);
+}
+
+.bubble {
+    /* default values */
+    --d: 50px;
+    --x: calc(var(--d) * -1);
+    --y: calc(var(--d) * -1);
+
+    --hue: 300;
+    --saturation: 100%;
+    --luminosity: 30%;
+    --alpha: 1;
+
+    --highlight-offset: -17.5%;
+    --highlight-lum: 80%;
+    --highlight-alpha: 1;
+
+    --shadow-diff: 0.5;
+    --shadow-saturation: 50%;
+    --shadow-alpha: 1;
+
+    --opacity: 0.8;
+
+
+    position: absolute;
+
+    left: calc(var(--x) - var(--d) / 2);
+    top: calc(var(--y) - var(--d) / 2);
+
+    width: var(--d);
+    height: var(--d);
+
+    border-radius: 50%;
+
+    --col: hsla(var(--hue), var(--saturation), var(--luminosity), var(--alpha));
+    --col-highlight: hsla(var(--hue), var(--saturation), var(--highlight-lum), var(--highlight-alpha));
+    --col-shadow: hsla(var(--hue), var(--shadow-saturation), calc(50% * (1 - var(--shadow-diff))), var(--shadow-alpha));
+
+    --highlight-position: calc(50% + var(--highlight-offset)) calc(50% + var(--highlight-offset));
+    --shadow-position: calc(50% - var(--highlight-offset)) calc(50% - var(--highlight-offset));
+
+    background:
+        radial-gradient(circle at var(--highlight-position), var(--col-highlight) 1%, #fff0 40%),
+        radial-gradient(circle at 50% 0%, #0000, #0005 90%, #0009 100%),
+        radial-gradient(circle at var(--shadow-position), #0000 10%, var(--col-shadow) 70%),
+        linear-gradient(var(--col) 0%, var(--col) 100%);
+
+    opacity: var(--opacity);
+
+    transform: scale(1, -1);
+    ;
+}
+
+
+/* ---------------------------------------------------------- */
+/* --------- unused custom background bubble scetch --------- */
+/* ---------------------------------------------------------- */
+
+/* extention for regular plain-colored bubble */
+.bubble_custom-bg {
+    --shadow-saturation: 0%;
+
+    --custom-bg-image: url(./custom_bgs/color-fluid.jpg);
+    --custom-bg-highlight-lum: 5;
+
+    background:
+        radial-gradient(circle at 50% 0%, #0000, #0005 90%, #0009 100%),
+        var(--custom-bg-image) center center / cover no-repeat;
+}
+
+/* boiler plate */
+.bubble_custom-bg:before,
+.bubble_custom-bg:after {
+    content: "";
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+/* highlight for bubble_custom-bg */
+.bubble_custom-bg:after {
+    background: var(--custom-bg-image) center center / cover no-repeat;
+
+    filter: brightness(var(--custom-bg-highlight-lum));
+
+    mask-image: radial-gradient(circle at var(--highlight-position), hsla(0, 0%, 100%, var(--highlight-alpha)) 25%, #fff0 100%);
+}
+
+/* shadow for bubble_custom-bg */
+.bubble_custom-bg:before {
+    background: var(--custom-bg-image) center center / cover no-repeat;
+
+    filter: brightness(0.5);
+
+    mask-image: radial-gradient(circle at var(--highlight-position), #fff0 25%, hsla(0, 0%, 100%, var(--shadow-alpha)) 100%);
+}

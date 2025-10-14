@@ -1,0 +1,430 @@
+// ----------------------------
+// --------- controls ---------
+// ----------------------------
+
+document.addEventListener('keydown', (e) => {
+    switch (e.key) {
+        case ' ':
+            currentSimulation.runningIntervalId ? currentSimulation.stop() : currentSimulation.run();
+            break;
+        case 'x':
+            currentSimulation.stop();
+            currentSimulation.generateBubbles(generatingRules);
+            break;
+        case 'q':
+            currentSimulation.stop();
+            currentSimulation.generateBubbles(generatingRules);
+            currentSimulation.run();
+            break;
+
+        case 's':
+            currentSimulation.saveState();
+            currentSimulation.stopAutoSave();
+            break;
+        case 'b':
+            currentSimulation.loadState();
+            break;
+        case 'S':
+            currentSimulation.startAutoSave(150);
+            break;
+        case 'c':
+            currentSimulation.stopAutoSave();
+            break;
+
+        case 'i':
+            if (currentSimulation.runningIntervalId) {
+                break;
+            }
+            currentSimulation.doCycle(true);
+            currentSimulation.endCycleTasks.forEach(callback => callback?.());
+            break;
+        case 'I':
+            if (currentSimulation.runningIntervalId) {
+                break;
+            }
+            currentSimulation.simulationSpeed *= -1;
+            currentSimulation.doCycle(true);
+            currentSimulation.endCycleTasks.forEach(callback => callback?.());
+            currentSimulation.simulationSpeed *= -1;
+            break;
+        case '.':
+            if (fsSim.runningIntervalId || qtSim.runningIntervalId) {
+                break;
+            }
+            fsSim.doCycle(true);
+            fsSim.endCycleTasks.forEach(callback => callback?.());
+            qtSim.doCycle(true);
+            qtSim.endCycleTasks.forEach(callback => callback?.());
+            break;
+        case ',':
+            if (fsSim.runningIntervalId || qtSim.runningIntervalId) {
+                break;
+            }
+            fsSim.simulationSpeed *= -1;
+            qtSim.simulationSpeed *= -1;
+            
+            fsSim.doCycle(true);
+            fsSim.endCycleTasks.forEach(callback => callback?.());
+            qtSim.doCycle(true);
+            qtSim.endCycleTasks.forEach(callback => callback?.());
+            
+            fsSim.simulationSpeed *= -1;
+            qtSim.simulationSpeed *= -1;
+            break;
+
+        case 'ArrowUp':
+            currentSimulation.simulationSpeed += 0.1;
+            break;
+        case 'ArrowDown':
+            currentSimulation.simulationSpeed -= 0.1;
+            break;
+
+        case 'a':
+            currentSimulation = Object.is(currentSimulation, fsSim) ? qtSim : fsSim;
+            break;
+
+        case 'r':
+            const numberOfCycles = prompt('Input a number of cycles to rewind. Number could be negative', 50);
+            if(!numberOfCycles) {
+                alert("Incorrect value for number of cycles, try inputting a number");
+                break;
+            }
+            const rewindConfirmed = confirm(`Are you sure you want to rewind ${Math.abs(numberOfCycles)} ${numberOfCycles < 0 ? "backwards" : ""}?`);
+            if(!rewindConfirmed) {
+                break;
+            }
+            
+            const start = new Date().getTime();
+            currentSimulation.rewind(numberOfCycles);
+            const end = new Date().getTime();
+            
+            // console.log(`Rewinding \n${Math.abs(numberOfCycles)} cycles ${numberOfCycles < 0 ? "backwards" : ""}\ntook: ${end - start}ms`);
+            alert(`Rewinding \n${Math.abs(numberOfCycles)} cycles ${numberOfCycles < 0 ? "backwards" : ""}\ntook: ${end - start}ms`);
+            break;
+
+        default:
+            console.log(`${e.key}`)
+            break;
+    }
+});
+
+// --------------------------------------
+// --------- bubbles generation ---------
+// --------------------------------------
+
+let fullSearchBubbles = '';
+let quadTreeBubbles = '';
+const n = 1000;
+for (let i = 0; i < n; i++) {
+    fullSearchBubbles += `<div class="bubble" id="${i}"></div>`;
+    quadTreeBubbles += `<div class="bubble" id="${i}"></div>`;
+}
+document.getElementById('full-search-sim').querySelector('.bubbles-window').innerHTML = fullSearchBubbles;
+document.getElementById('quad-tree-sim').querySelector('.bubbles-window').innerHTML = quadTreeBubbles;
+
+// ---------------------------
+// --------- samples ---------
+// ---------------------------
+
+const realBubblesSamples = [
+    [
+        "{\n    \"elementId\": \"1\",\n    \"x\": 271.1928508467981,\n    \"y\": 601.4280895947932,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 43.82210992398002,\n        \"y\": -24.075354240604888\n    },\n    \"hue\": 209\n}",
+        "{\n    \"elementId\": \"2\",\n    \"x\": 569.8483477449818,\n    \"y\": 711.5075864556788,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 8.976504576565683,\n        \"y\": 44.56234574072263\n    },\n    \"hue\": 105\n}",
+        "{\n    \"elementId\": \"3\",\n    \"x\": 569.3733328638305,\n    \"y\": 660.9380411650535,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": -35.751458942098296,\n        \"y\": -31.688666771123927\n    },\n    \"hue\": 252\n}"
+    ],
+    [
+        "{\n    \"elementId\": \"1\",\n    \"x\": 105.54500073558211,\n    \"y\": 449.50040428645667,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": -45.88609481862338,\n        \"y\": 19.861175753119582\n    },\n    \"hue\": 304\n}",
+        "{\n    \"elementId\": \"2\",\n    \"x\": 213.10313068720947,\n    \"y\": 699.9807035662565,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 46.7629100621865,\n        \"y\": 4.952050031449318\n    },\n    \"hue\": 24\n}",
+        "{\n    \"elementId\": \"3\",\n    \"x\": 184.8055331127465,\n    \"y\": 658.6801707467911,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 19.769408024301082,\n        \"y\": -32.12568520407559\n    },\n    \"hue\": 97\n}"
+    ],
+    [
+        "{\n    \"elementId\": \"1\",\n    \"x\": 201.66138946888634,\n    \"y\": 245.3514362608867,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 0.8960531416632094,\n        \"y\": -31.396923843369713\n    },\n    \"hue\": 221\n}",
+        "{\n    \"elementId\": \"2\",\n    \"x\": 151.97466081496367,\n    \"y\": 249.2095039138043,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": -1.9034682230223776,\n        \"y\": -46.66856304856622\n    },\n    \"hue\": 215\n}",
+        "{\n    \"elementId\": \"3\",\n    \"x\": 219.03404020630668,\n    \"y\": 384.0825004283269,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": -71.90972034295393,\n        \"y\": 36.886684219501795\n    },\n    \"hue\": 177\n}"
+    ],
+    [
+        "{\n    \"elementId\": \"1\",\n    \"x\": 415.604350586269,\n    \"y\": 521.9849526176417,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 26.32293995020874,\n        \"y\": -40.74886570816237\n    },\n    \"hue\": 209\n}",
+        "{\n    \"elementId\": \"2\",\n    \"x\": 599.4438833339151,\n    \"y\": 858.4296403628416,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 8.976504576565683,\n        \"y\": 44.56234574072263\n    },\n    \"hue\": 105\n}",
+        "{\n    \"elementId\": \"3\",\n    \"x\": 451.73211367986806,\n    \"y\": 556.6809324726993,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 22.083778091830602,\n        \"y\": 23.417746239292505\n    },\n    \"hue\": 252\n}"
+    ],
+    [
+        "{\n    \"elementId\": \"0\",\n    \"x\": 368.6919533878519,\n    \"y\": 436.22850358749736,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -14.95415576593252,\n        \"y\": 74.36474054118173\n    },\n    \"hue\": 265\n}",
+        "{\n    \"elementId\": \"1\",\n    \"x\": 648.3176751320188,\n    \"y\": 245.97413627452113,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -17.383008489284954,\n        \"y\": 39.6423296506004\n    },\n    \"hue\": 173\n}",
+        "{\n    \"elementId\": \"2\",\n    \"x\": 680.1953164806365,\n    \"y\": 50.90807230165411,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -40.76212036390407,\n        \"y\": 46.91218695356217\n    },\n    \"hue\": 119\n}",
+        "{\n    \"elementId\": \"3\",\n    \"x\": 717.3927762450788,\n    \"y\": 614.1865291801608,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -17.33421475373769,\n        \"y\": -46.89909379584325\n    },\n    \"hue\": 165\n}",
+        "{\n    \"elementId\": \"4\",\n    \"x\": 661.8438893126621,\n    \"y\": 284.5554133278495,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 0.7643098243227089,\n        \"y\": 55.21894596112106\n    },\n    \"hue\": 168\n}",
+        "{\n    \"elementId\": \"5\",\n    \"x\": 129.8225122897054,\n    \"y\": 83.32025863214801,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -24.63354496378264,\n        \"y\": 55.198849932962176\n    },\n    \"hue\": 264\n}",
+        "{\n    \"elementId\": \"6\",\n    \"x\": 71.66902842297483,\n    \"y\": 343.26867403760957,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -35.87109362495133,\n        \"y\": 51.14042118210586\n    },\n    \"hue\": 267\n}",
+        "{\n    \"elementId\": \"7\",\n    \"x\": 153.39803484834206,\n    \"y\": 431.25011332456756,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -35.381759333176305,\n        \"y\": 55.141289837265475\n    },\n    \"hue\": 210\n}",
+        "{\n    \"elementId\": \"8\",\n    \"x\": 565.2393931807292,\n    \"y\": 250.49745845126108,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 42.24322981333979,\n        \"y\": 20.144549984347147\n    },\n    \"hue\": 21\n}",
+        "{\n    \"elementId\": \"9\",\n    \"x\": 417.7690277091441,\n    \"y\": 219.29866978008207,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -3.6817082575623523,\n        \"y\": 15.20401199767393\n    },\n    \"hue\": 359\n}",
+        "{\n    \"elementId\": \"10\",\n    \"x\": 124.1535517120131,\n    \"y\": 308.4080643274609,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 16.53935830617106,\n        \"y\": -20.623679686572967\n    },\n    \"hue\": 140\n}",
+        "{\n    \"elementId\": \"11\",\n    \"x\": 60.846449762382306,\n    \"y\": 410.42027457531884,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -38.718984805673614,\n        \"y\": 5.247449279767038\n    },\n    \"hue\": 232\n}",
+        "{\n    \"elementId\": \"12\",\n    \"x\": 618.2622991786662,\n    \"y\": 106.6720592724455,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 15.673976120163772,\n        \"y\": 38.696779611412154\n    },\n    \"hue\": 62\n}",
+        "{\n    \"elementId\": \"13\",\n    \"x\": 182.25138619715025,\n    \"y\": 386.0538369807028,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -26.011477682865568,\n        \"y\": 60.46221651438381\n    },\n    \"hue\": 215\n}",
+        "{\n    \"elementId\": \"14\",\n    \"x\": 337.3169946066869,\n    \"y\": 339.06896552793165,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -19.81398873681146,\n        \"y\": -16.476752924163325\n    },\n    \"hue\": 139\n}",
+        "{\n    \"elementId\": \"15\",\n    \"x\": 497.61591547689727,\n    \"y\": 212.3813852166682,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -21.261214451084115,\n        \"y\": -59.03880816084218\n    },\n    \"hue\": 246\n}",
+        "{\n    \"elementId\": \"16\",\n    \"x\": 344.41463023466275,\n    \"y\": 153.75797860268534,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -15.709752544344294,\n        \"y\": -19.078279331289785\n    },\n    \"hue\": 264\n}",
+        "{\n    \"elementId\": \"17\",\n    \"x\": 322.0247363833297,\n    \"y\": 602.8877174908328,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -22.361952478302676,\n        \"y\": 5.373275431189839\n    },\n    \"hue\": 190\n}",
+        "{\n    \"elementId\": \"18\",\n    \"x\": 259.77926244629253,\n    \"y\": 145.9182414801905,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 41.08734739068935,\n        \"y\": -16.96953590232056\n    },\n    \"hue\": 27\n}",
+        "{\n    \"elementId\": \"19\",\n    \"x\": 389.6888151513991,\n    \"y\": 555.2573035176983,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -5.921277371965417,\n        \"y\": -15.371533205656526\n    },\n    \"hue\": 102\n}",
+        "{\n    \"elementId\": \"20\",\n    \"x\": 118.38801988890836,\n    \"y\": 387.33223652085206,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -27.463206981230222,\n        \"y\": 17.956918122863126\n    },\n    \"hue\": 174\n}",
+        "{\n    \"elementId\": \"21\",\n    \"x\": 665.4034372305723,\n    \"y\": 154.1574615197759,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -15.282499479431152,\n        \"y\": 61.561078702199005\n    },\n    \"hue\": 288\n}",
+        "{\n    \"elementId\": \"22\",\n    \"x\": 406.61078566665344,\n    \"y\": 445.8992172768532,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -26.685521455617646,\n        \"y\": -74.06464900462782\n    },\n    \"hue\": 348\n}",
+        "{\n    \"elementId\": \"23\",\n    \"x\": 153.06722799151436,\n    \"y\": 532.6663331624399,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -11.713835116618455,\n        \"y\": 32.88308067238607\n    },\n    \"hue\": 359\n}",
+        "{\n    \"elementId\": \"24\",\n    \"x\": 31.304334313980522,\n    \"y\": 353.9339164536714,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -7.969092056391666,\n        \"y\": -43.40426412697928\n    },\n    \"hue\": 344\n}",
+        "{\n    \"elementId\": \"25\",\n    \"x\": 353.7366276666928,\n    \"y\": 296.19020178584026,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 25.285985053363174,\n        \"y\": -31.18373980721918\n    },\n    \"hue\": 314\n}",
+        "{\n    \"elementId\": \"26\",\n    \"x\": 562.1025408362243,\n    \"y\": 500.7909382454682,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 1.8224498709914911,\n        \"y\": -46.64983977731081\n    },\n    \"hue\": 233\n}",
+        "{\n    \"elementId\": \"27\",\n    \"x\": 338.17703475063695,\n    \"y\": 454.7908700908865,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -7.8228149150956074,\n        \"y\": 46.24378540285366\n    },\n    \"hue\": 93\n}",
+        "{\n    \"elementId\": \"28\",\n    \"x\": 534.2746584318355,\n    \"y\": 288.991556987377,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -24.293992595876908,\n        \"y\": -43.701280573359384\n    },\n    \"hue\": 274\n}",
+        "{\n    \"elementId\": \"29\",\n    \"x\": 473.502117450367,\n    \"y\": 546.1341158012593,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 66.20951727957201,\n        \"y\": -7.006981896598099\n    },\n    \"hue\": 10\n}"
+    ],
+]
+
+const imaginaryBubblesSamples = [
+    [
+        "{\n    \"elementId\": \"0\",\n    \"x\": 50,\n    \"y\": 50,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 0,\n        \"y\": 0\n    },\n    \"hue\": 0\n}",
+        "{\n    \"elementId\": \"1\",\n    \"x\": 150,\n    \"y\": 50,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": -50,\n        \"y\": 0\n    },\n    \"hue\": 120\n}",
+    ],
+    [
+        "{\n    \"elementId\": \"0\",\n    \"x\": 55,\n    \"y\": 55,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": 35,\n        \"y\": 35\n    },\n    \"hue\": 0\n}",
+        "{\n    \"elementId\": \"1\",\n    \"x\": 155,\n    \"y\": 155,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": -35,\n        \"y\": -35\n    },\n    \"hue\": 120\n}",
+    ],
+    [
+        "{\n    \"elementId\": \"0\",\n    \"x\": 300,\n    \"y\": 150,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 0,\n        \"y\": 50\n    },\n    \"hue\": 0\n}",
+        "{\n    \"elementId\": \"1\",\n    \"x\": 338.8228567653781,\n    \"y\": 155.11112605663978,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -12.940952255126037,\n        \"y\": 48.29629131445341\n    },\n    \"hue\": 15\n}",
+        "{\n    \"elementId\": \"2\",\n    \"x\": 375,\n    \"y\": 170.0961894323342,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -25,\n        \"y\": 43.30127018922194\n    },\n    \"hue\": 30\n}",
+        "{\n    \"elementId\": \"3\",\n    \"x\": 406.06601717798213,\n    \"y\": 193.93398282201788,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -35.35533905932738,\n        \"y\": 35.35533905932737\n    },\n    \"hue\": 45\n}",
+        "{\n    \"elementId\": \"4\",\n    \"x\": 429.90381056766585,\n    \"y\": 225,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -43.30127018922194,\n        \"y\": 25\n    },\n    \"hue\": 60\n}",
+        "{\n    \"elementId\": \"5\",\n    \"x\": 444.8888739433602,\n    \"y\": 261.1771432346219,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -48.29629131445341,\n        \"y\": 12.940952255126037\n    },\n    \"hue\": 75\n}",
+        "{\n    \"elementId\": \"6\",\n    \"x\": 450,\n    \"y\": 300,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -50,\n        \"y\": 0\n    },\n    \"hue\": 90\n}",
+        "{\n    \"elementId\": \"7\",\n    \"x\": 444.8888739433602,\n    \"y\": 338.8228567653781,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -48.29629131445341,\n        \"y\": -12.940952255126037\n    },\n    \"hue\": 105\n}",
+        "{\n    \"elementId\": \"8\",\n    \"x\": 429.90381056766585,\n    \"y\": 375,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -43.30127018922194,\n        \"y\": -25\n    },\n    \"hue\": 120\n}",
+        "{\n    \"elementId\": \"9\",\n    \"x\": 406.06601717798213,\n    \"y\": 406.06601717798213,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -35.35533905932738,\n        \"y\": -35.35533905932738\n    },\n    \"hue\": 135\n}",
+        "{\n    \"elementId\": \"10\",\n    \"x\": 375,\n    \"y\": 429.90381056766585,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -25,\n        \"y\": -43.30127018922194\n    },\n    \"hue\": 150\n}",
+        "{\n    \"elementId\": \"11\",\n    \"x\": 338.8228567653781,\n    \"y\": 444.8888739433602,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": -12.940952255126037,\n        \"y\": -48.29629131445341\n    },\n    \"hue\": 165\n}",
+        "{\n    \"elementId\": \"12\",\n    \"x\": 300,\n    \"y\": 450,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 0,\n        \"y\": -50\n    },\n    \"hue\": 180\n}",
+        "{\n    \"elementId\": \"13\",\n    \"x\": 261.1771432346219,\n    \"y\": 444.8888739433602,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 12.940952255126037,\n        \"y\": -48.29629131445341\n    },\n    \"hue\": 195\n}",
+        "{\n    \"elementId\": \"14\",\n    \"x\": 225,\n    \"y\": 429.90381056766585,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 25,\n        \"y\": -43.30127018922194\n    },\n    \"hue\": 210\n}",
+        "{\n    \"elementId\": \"15\",\n    \"x\": 193.93398282201787,\n    \"y\": 406.06601717798213,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 35.35533905932738,\n        \"y\": -35.35533905932738\n    },\n    \"hue\": 225\n}",
+        "{\n    \"elementId\": \"16\",\n    \"x\": 170.0961894323342,\n    \"y\": 375,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 43.30127018922194,\n        \"y\": -25\n    },\n    \"hue\": 240\n}",
+        "{\n    \"elementId\": \"17\",\n    \"x\": 155.11112605663978,\n    \"y\": 338.8228567653781,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 48.29629131445341,\n        \"y\": -12.940952255126037\n    },\n    \"hue\": 255\n}",
+        "{\n    \"elementId\": \"18\",\n    \"x\": 150,\n    \"y\": 300,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 50,\n        \"y\": 0\n    },\n    \"hue\": 270\n}",
+        "{\n    \"elementId\": \"19\",\n    \"x\": 155.11112605663978,\n    \"y\": 261.1771432346219,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 48.29629131445341,\n        \"y\": 12.940952255126037\n    },\n    \"hue\": 285\n}",
+        "{\n    \"elementId\": \"20\",\n    \"x\": 170.0961894323342,\n    \"y\": 225,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 43.30127018922194,\n        \"y\": 25\n    },\n    \"hue\": 300\n}",
+        "{\n    \"elementId\": \"21\",\n    \"x\": 193.93398282201787,\n    \"y\": 193.93398282201787,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 35.35533905932738,\n        \"y\": 35.35533905932738\n    },\n    \"hue\": 315\n}",
+        "{\n    \"elementId\": \"22\",\n    \"x\": 225,\n    \"y\": 170.0961894323342,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 25,\n        \"y\": 43.30127018922194\n    },\n    \"hue\": 330\n}",
+        "{\n    \"elementId\": \"23\",\n    \"x\": 261.1771432346219,\n    \"y\": 155.11112605663978,\n    \"d\":  22,\n    \"velocity\": {\n        \"x\": 12.940952255126037,\n        \"y\": 48.29629131445341\n    },\n    \"hue\": 345\n}",
+    ],
+    [
+        "{\n    \"elementId\": \"0\",\n    \"x\": 368.6919533878519,\n    \"y\": 436.22850358749736,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -14.95415576593252,\n        \"y\": 74.36474054118173\n    },\n    \"hue\": 0\n}",
+        "{\n    \"elementId\": \"1\",\n    \"x\": 648.3176751320188,\n    \"y\": 245.97413627452113,\n    \"d\": 45,\n    \"velocity\": {\n        \"x\": -17.383008489284954,\n        \"y\": 39.6423296506004\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"2\",\n    \"x\": 680.1953164806365,\n    \"y\": 50.90807230165411,\n    \"d\": 50,\n    \"velocity\": {\n        \"x\": -40.76212036390407,\n        \"y\": 46.91218695356217\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"3\",\n    \"x\": 717.3927762450788,\n    \"y\": 614.1865291801608,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -17.33421475373769,\n        \"y\": -46.89909379584325\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"4\",\n    \"x\": 661.8438893126621,\n    \"y\": 284.5554133278495,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 0.7643098243227089,\n        \"y\": 55.21894596112106\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"5\",\n    \"x\": 129.8225122897054,\n    \"y\": 83.32025863214801,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -24.63354496378264,\n        \"y\": 55.198849932962176\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"6\",\n    \"x\": 71.66902842297483,\n    \"y\": 343.26867403760957,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -35.87109362495133,\n        \"y\": 51.14042118210586\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"7\",\n    \"x\": 153.39803484834206,\n    \"y\": 431.25011332456756,\n    \"d\": 45,\n    \"velocity\": {\n        \"x\": -35.381759333176305,\n        \"y\": 55.141289837265475\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"8\",\n    \"x\": 565.2393931807292,\n    \"y\": 250.49745845126108,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 42.24322981333979,\n        \"y\": 20.144549984347147\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"9\",\n    \"x\": 417.7690277091441,\n    \"y\": 219.29866978008207,\n    \"d\": 60,\n    \"velocity\": {\n        \"x\": -3.6817082575623523,\n        \"y\": 15.20401199767393\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"10\",\n    \"x\": 124.1535517120131,\n    \"y\": 308.4080643274609,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 16.53935830617106,\n        \"y\": -20.623679686572967\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"11\",\n    \"x\": 60.846449762382306,\n    \"y\": 410.42027457531884,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -38.718984805673614,\n        \"y\": 5.247449279767038\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"12\",\n    \"x\": 618.2622991786662,\n    \"y\": 106.6720592724455,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 15.673976120163772,\n        \"y\": 38.696779611412154\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"13\",\n    \"x\": 182.25138619715025,\n    \"y\": 386.0538369807028,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -26.011477682865568,\n        \"y\": 60.46221651438381\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"14\",\n    \"x\": 337.3169946066869,\n    \"y\": 339.06896552793165,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -19.81398873681146,\n        \"y\": -16.476752924163325\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"15\",\n    \"x\": 497.61591547689727,\n    \"y\": 212.3813852166682,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -21.261214451084115,\n        \"y\": -59.03880816084218\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"16\",\n    \"x\": 344.41463023466275,\n    \"y\": 153.75797860268534,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -15.709752544344294,\n        \"y\": -19.078279331289785\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"17\",\n    \"x\": 322.0247363833297,\n    \"y\": 602.8877174908328,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -22.361952478302676,\n        \"y\": 5.373275431189839\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"18\",\n    \"x\": 259.77926244629253,\n    \"y\": 145.9182414801905,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 41.08734739068935,\n        \"y\": -16.96953590232056\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"19\",\n    \"x\": 389.6888151513991,\n    \"y\": 555.2573035176983,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -5.921277371965417,\n        \"y\": -15.371533205656526\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"20\",\n    \"x\": 118.38801988890836,\n    \"y\": 387.33223652085206,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -27.463206981230222,\n        \"y\": 17.956918122863126\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"21\",\n    \"x\": 665.4034372305723,\n    \"y\": 154.1574615197759,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -15.282499479431152,\n        \"y\": 61.561078702199005\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"22\",\n    \"x\": 406.61078566665344,\n    \"y\": 445.8992172768532,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -26.685521455617646,\n        \"y\": -74.06464900462782\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"23\",\n    \"x\": 153.06722799151436,\n    \"y\": 532.6663331624399,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -11.713835116618455,\n        \"y\": 32.88308067238607\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"24\",\n    \"x\": 31.304334313980522,\n    \"y\": 353.9339164536714,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -7.969092056391666,\n        \"y\": -43.40426412697928\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"25\",\n    \"x\": 353.7366276666928,\n    \"y\": 296.19020178584026,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 25.285985053363174,\n        \"y\": -31.18373980721918\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"26\",\n    \"x\": 562.1025408362243,\n    \"y\": 500.7909382454682,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 1.8224498709914911,\n        \"y\": -46.64983977731081\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"27\",\n    \"x\": 338.17703475063695,\n    \"y\": 454.7908700908865,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -7.8228149150956074,\n        \"y\": 46.24378540285366\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"28\",\n    \"x\": 534.2746584318355,\n    \"y\": 288.991556987377,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": -24.293992595876908,\n        \"y\": -43.701280573359384\n    },\n    \"hue\": 200\n}",
+        "{\n    \"elementId\": \"29\",\n    \"x\": 473.502117450367,\n    \"y\": 546.1341158012593,\n    \"d\": 30,\n    \"velocity\": {\n        \"x\": 66.20951727957201,\n        \"y\": -7.006981896598099\n    },\n    \"hue\": 200\n}"
+    ]
+]
+
+// -------------------------------------
+// --------- end cycle actions ---------
+// -------------------------------------
+
+class EndCycleActions {
+    static _framePropByRect(rect, color, thickness) {
+        const { x, y, w, h } = rect;
+
+        let styleProp = `linear-gradient(${color}, ${color}) ${x}px ${y}px / calc(${w}px + ${thickness}px) ${thickness}px no-repeat,
+                         linear-gradient(${color}, ${color}) ${x}px ${y}px / ${thickness}px calc(${h}px + ${thickness}px) no-repeat,
+                         linear-gradient(${color}, ${color}) calc(${x}px - ${thickness}px) calc(${h}px + ${y}px - ${thickness}px) / calc(${w}px + ${thickness}px) ${thickness}px no-repeat,
+                         linear-gradient(${color}, ${color}) calc(${w}px + ${x}px - ${thickness}px) calc(${y}px - ${thickness}px) / ${thickness}px calc(${h}px + ${thickness}px) no-repeat`;
+
+        return styleProp;
+    }
+
+    static cleanSimulationBackground(sim) { sim.bubblesWindowElement.style.setProperty('background', ''); }
+
+    static logSystemsEnergy(sim) {
+        let totalEnergy = 0;
+        sim.bubbles.forEach(b => {
+            const mass = Math.PI * b.d ** 2 / 4;
+            totalEnergy += mass * (b.velocity.x ** 2 + b.velocity.y ** 2) / 2;
+        })
+        console.log(totalEnergy);
+    }
+
+    static _logAvgCycleFactory(sim) {
+        let n = 0;
+        let sum = 0;
+
+        return function () {
+            n++;
+            sum += sim.lastCycleDuration;
+            console.log(sum / n);
+        };
+    }
+
+    static drawQuadTreeGrid(quadTreeSim) {
+        const quadTree = quadTreeSim.quadTree;
+        const canvasElement = quadTreeSim.bubblesWindowElement;
+        const color = '#7777';
+        const thickness = 3;
+
+        const frameProps = [];
+        (function recurrentScan(quadTree) {
+            frameProps.push(EndCycleActions._framePropByRect(quadTree.rect, color, thickness));
+            for (let side in quadTree.branches) {
+                const branch = quadTree.branches[side];
+                if (!branch) {
+                    continue;
+                }
+                recurrentScan(branch);
+            }
+        })(quadTree);
+
+        let currentBackground = canvasElement.style.getPropertyValue('background');
+        currentBackground = currentBackground ? "," + currentBackground : "";
+        canvasElement.style.setProperty('background', frameProps.join(',') + currentBackground);
+    }
+
+    static bubbleContactBranches(quadTreeSim) {
+        const canvasElement = quadTreeSim.bubblesWindowElement;
+        const b = quadTreeSim.bubbles[0];
+        const qt = quadTreeSim.quadTree;
+
+        const frameProps = [];
+
+        (function recurrentRectMarking(quadTree, bubble) {
+            const covers = quadTree.rect.covers(bubble);
+            const intersects = quadTree.rect.intersects(bubble);
+            const leaf = Object.is(quadTree.bubble, bubble);
+
+            if (!covers && !intersects) {
+                return;
+            }
+
+            if (covers) {
+                const col = leaf ? '#f00' : '#0c0';
+                frameProps.push(EndCycleActions._framePropByRect(quadTree.rect, col, 2));
+            }
+            if (intersects) {
+                frameProps.push(EndCycleActions._framePropByRect(quadTree.rect, '#00f', 2));
+            }
+
+            if (leaf) {
+                return;
+            }
+
+            for (let side in quadTree.branches) {
+                if (!quadTree.branches[side]) {
+                    continue;
+                }
+                recurrentRectMarking(quadTree.branches[side], bubble);
+            }
+        })(qt, b);
+
+        frameProps.reverse();
+        let currentBackground = canvasElement.style.getPropertyValue('background');
+        currentBackground = currentBackground ? "," + currentBackground : "";
+        canvasElement.style.setProperty('background', frameProps.join(',') + currentBackground);
+    }
+
+    static markClosestBubbles(quadTreeSim, targetBubble, markHue = '120') {
+        const b1 = targetBubble;
+        const qts = quadTreeSim;
+
+        const collisionOffset = b1.d !== qts.maxD ? qts.maxD : qts.submaxD;
+        const collisionArea = { x: b1.x, y: b1.y, d: b1.d + collisionOffset };
+
+        b1.element.style.setProperty('outline', '2px solid black');
+        b1.element.style.setProperty('outline-offset', `${collisionOffset / 2}px`);
+
+        const b2s = qts.quadTree.query(collisionArea);
+        b2s?.forEach(b2 => {
+            // save previous value to be able to restore it in unmarkBubbles
+            const initialHue = b2.element.style.getPropertyValue('--hue');
+            b2.element.style.setProperty('--hue-init', initialHue);
+
+            b2.element.style.setProperty('--hue', markHue);
+        });
+    }
+
+    static markCustomQueryBubbles(quadTreeSim, targetBubble, branchFilter=null, leafFilter=null, markHue = '270') {
+        branchFilter ||= QuadTreeSimulation.branchFilter;
+        leafFilter ||= QuadTreeSimulation.leafFilter;
+
+        const bubblesToMark = quadTreeSim.quadTree.customQuery(targetBubble, branchFilter, leafFilter);
+        bubblesToMark?.forEach(b2 => {
+            const initialHue = b2.element.style.getPropertyValue('--hue');
+            b2.element.style.setProperty('--hue-init', initialHue);
+
+            b2.element.style.setProperty('--hue', markHue);
+        });
+    }
+
+    static unmarkBubbles(quadTreeSim) {
+        quadTreeSim.bubbles.forEach(b => {
+            const initialCol = b.element.style.getPropertyValue('--hue-init');
+            if (!initialCol) {
+                return;
+            }
+            b.element.style.setProperty('--hue', initialCol);
+        });
+    }
+}
+
+// ----------------------------------------------
+// --------- simulations setup & launch ---------
+// ----------------------------------------------
+
+const generatingRules = { amountOfBubbles: 100, randomisePositions: true, minD: 20, maxD: 20, hue: 270 };
+const fsSim = new FullSearchSimulation(document.querySelector("#full-search-sim .bubbles-window"), generatingRules, 5);
+// const fsSim = new FullSearchSimulation(document.querySelector("#full-search-sim .bubbles-window"), {}, 7, realBubblesSamples[4]);
+// const fsSim = new FullSearchSimulation(document.querySelector("#full-search-sim .bubbles-window"), {}, 1, imaginaryBubblesSamples[3]);
+const qtSim = new QuadTreeSimulation(document.querySelector("#quad-tree-sim .bubbles-window"), generatingRules, 5);
+// const qtSim = new QuadTreeSimulation(document.querySelector("#quad-tree-sim .bubbles-window"), {}, 7, realBubblesSamples[4]);
+// const qtSim = new QuadTreeSimulation(document.querySelector("#quad-tree-sim .bubbles-window"), {}, 1, imaginaryBubblesSamples[3]);
+
+// fsSim.constantCycleTime = false;
+// qtSim.constantCycleTime = false;
+
+(function endCycleSetup() {
+    fsSim.endCycleTasks.push(EndCycleActions._logAvgCycleFactory(fsSim));
+    
+    // qtSim.endCycleTasks.push(EndCycleActions._logAvgCycleFactory(qtSim));
+    qtSim.endCycleTasks.push(() => { EndCycleActions.cleanSimulationBackground(qtSim); });
+    qtSim.endCycleTasks.push(() => { EndCycleActions.drawQuadTreeGrid(qtSim); });
+    // qtSim.endCycleTasks.push(() => { EndCycleActions.bubbleContactBranches(qtSim); });
+    // qtSim.endCycleTasks.push(() => { EndCycleActions.unmarkBubbles(qtSim); });
+    // qtSim.endCycleTasks.push(() => { EndCycleActions.markClosestBubbles(qtSim, qtSim.bubbles[0]); });
+    // qtSim.endCycleTasks.push(() => { EndCycleActions.logSystemsEnergy(qtSim); });
+    // qtSim.endCycleTasks.push(() => { EndCycleActions.markCustomQueryBubbles(qtSim, qtSim.bubbles[0], null, (b1, b2) => !Object.is(b1, b2), '1)20'); });
+})();
+
+let currentSimulation = fsSim;
+// fsSim.run();
+// qtSim.run();
