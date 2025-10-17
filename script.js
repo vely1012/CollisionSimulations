@@ -84,7 +84,7 @@ document.addEventListener('keydown', (e) => {
             break;
 
         case 'r':
-            const numberOfCycles = prompt('Input a number of cycles to rewind. Number could be negative', 50);
+            const numberOfCycles = Number(prompt('Input a number of cycles to rewind. Number could be negative', 50));
             if(!numberOfCycles) {
                 alert("Incorrect value for number of cycles, try inputting a number");
                 break;

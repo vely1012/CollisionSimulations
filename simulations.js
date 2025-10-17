@@ -22,7 +22,10 @@ class CollisionSimulation {
         this.autosaveInvervalId = 0;
         this.bubbles = [];
         this.bubblesSave = [];
-        this.endCycleTasks = [() => { this.render() }];
+        this.endCycleTasks = [
+            () => { this.moveBubbles() },
+            () => { this.render() }
+        ];
 
         this.bubblesWindowElement = bubblesWindowElement;
         let { height: maxTop, width: maxLeft } = this.bubblesWindowElement.getBoundingClientRect();
@@ -46,7 +49,7 @@ class CollisionSimulation {
         let gridSize, xStep, yStep, i;
 
         if (!generatingSettings.randomisePositions) {
-            i = 1
+            i = 0;
             gridSize = Math.ceil(Math.sqrt(generatingSettings.amountOfBubbles));
             xStep = this.maxLeft / (gridSize + 1);
             yStep = this.maxTop / (gridSize + 1);
@@ -107,21 +110,27 @@ class CollisionSimulation {
         throw new Error("doCycle method must be implemented by subclass");
     }
 
+    moveBubbles() {
+        const dt = this.lastCycleDuration * this.simulationSpeed;
+        for(let b of this.bubbles) {
+            b.move(dt);
+        }
+    }
+
     render() {
         for (let b of this.bubbles) {
-            const dt = this.lastCycleDuration * this.simulationSpeed;
-            b.move(dt);
             b.render();
         }
     }
 
     rewind(numberOfCycles) {
         const di = numberOfCycles > 0 ? 1 : -1;
-        const n = numberOfCycles * di;
+        const n = numberOfCycles;
 
         this.simulationSpeed *= di;
         for(let i = 0; i != n; i += di) {
             this.doCycle(true);
+            this.moveBubbles();
         }
         this.simulationSpeed /= di;
 

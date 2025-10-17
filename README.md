@@ -14,7 +14,7 @@ An educational project aimed at studying collision simulation development in gen
 
 For better testing performance, a keyboard simulation control system was implemented. Currently it provides these features:
 
-| Function | Key | Hint Word |
+| Function | Key | Memorization Hint |
 |----------|-----|-----------|
 | Play/Stop | Space | - |
 | Restart | x | - |
@@ -26,8 +26,8 @@ For better testing performance, a keyboard simulation control system was impleme
 | Iterate | i | iterate |
 | Switch simulation focus | a | alternate |
 | Iterate reverse | Shift + i | iterate |
-| Iterate both | . (also >) | - |
-| Iterate both reverse | , (also <) | - |
+| Iterate both | . | (it's also >) |
+| Iterate both reverse | , | (it's also <) |
 | Increase focused simulation speed | ArrowUp | speed up |
 | Decrease focused simulation speed | ArrowDown | slow down |
 | Rewind | r | rewind |
