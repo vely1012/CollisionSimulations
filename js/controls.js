@@ -17,6 +17,7 @@ function clearSimsCallbacks() {
 
 function togglePlayStop() {
     currentSimulation.runningIntervalId ? currentSimulation.stop() : currentSimulation.run();
+    document.getElementById('togglePlayStop').value = currentSimulation.runningIntervalId ? 'stop' : 'run';
 }
 
 function restartSimulation() {
@@ -32,19 +33,25 @@ function quickRestartSimulation() {
 
 function saveSimulationState() {
     currentSimulation.saveState();
-    currentSimulation.stopAutoSave();
+    stopAutoSave();
 }
 
 function loadSimulationState() {
     currentSimulation.loadState();
+
+    document.getElementById('toggleAutoSave').value = 'start autosave';
 }
 
 function startAutoSave() {
     currentSimulation.startAutoSave(150);
+
+    document.getElementById('toggleAutoSave').value = '🔴 recording';
 }
 
 function stopAutoSave() {
     currentSimulation.stopAutoSave();
+
+    document.getElementById('toggleAutoSave').value = 'start autosave';
 }
 
 function iterateSimulation() {
@@ -139,31 +146,9 @@ function switchSimulationFocus() {
     document.getElementById('ConstantCycleTime').checked = currentSimulation.constantCycleTime;
     document.getElementById('simulationSpeed').value = currentSimulation.simulationSpeed;
     document.getElementById('simulationSpeedRange').value = currentSimulation.simulationSpeed;
+    
+    document.getElementById('togglePlayStop').value = currentSimulation.runningIntervalId ? 'stop' : 'run';
 }
-
-// AI GENERATED CODE
-// currently unused
-// function syncControlsWithSimulation() {
-//     // Sync current simulation radio buttons
-//     const fssRadio = document.getElementById('swtichSimFss');
-//     const qtsRadio = document.getElementById('swtichSimQts');
-    
-//     if (Object.is(currentSimulation, fsSim)) {
-//         fssRadio.checked = true;
-//         qtsRadio.checked = false;
-//     } else {
-//         fssRadio.checked = false;
-//         qtsRadio.checked = true;
-//     }
-    
-//     // Sync constant cycle time checkbox
-//     const constantCycleCheckbox = document.getElementById('ConstantCycleTime');
-//     constantCycleCheckbox.checked = currentSimulation.constantCycleTime;
-    
-//     // Sync simulation speed range
-//     const speedRange = document.getElementById('Speed');
-//     speedRange.value = currentSimulation.simulationSpeed;
-// }
 
 function rewindSimulation() {
     const numberOfCycles = Number(prompt('Input a number of cycles to rewind. Number could be negative', 50));
@@ -270,35 +255,22 @@ document.addEventListener('keydown', (e) => {
     controlFuncs[e.key] ? controlFuncs[e.key]() : console.log(`${e.key}`);
 });
 
-document.getElementById('bubbleGenerationSettings').addEventListener('change', e => {
-    if(!e.target.matches('input')) {
-        return;
-    }
 
-    let extractedValue = null;
-    let classes = Array.from(e.target.classList);
-    let modifier = classes[1].replace(classes[0], "").substring(1);
-
-    switch(modifier) {
-        case "range":
-        case "number":
-            extractedValue = Number(e.target.value);
-            break;
-        
-        case "checkbox":
-            extractedValue = e.target.checked;
-            break;
-    }
-    
-    // generatingRules[e.target.id] = e.target.value;
-    generatingRules[e.target.id] = extractedValue;
-});
+document.getElementById('randomisePositions').addEventListener('change', e => generatingRules.randomisePositions = e.target.checked);
 
 for(let numInput of document.querySelectorAll('#bubbleGenerationSettings .gui__input_number:nth-of-type(n + 2)')) {
     numInput.addEventListener('mousewheel', e => {
         syncControlValues(e.target.id, e.target.previousElementSibling.id);
+        // e.target.dispatchEvent(new Event('change'));
+        generatingRules[e.target.id] = Number(e.target.value);
     });
 }
+
+document.getElementById('simulationSpeed').addEventListener('mousewheel', e => {
+    syncControlValues(e.target.id, e.target.previousElementSibling.id);
+    // e.target.dispatchEvent(new Event('change'));
+    currentSimulation.simulationSpeed = e.target.value;
+});
 
 document.getElementById("EndCycleCallbacks").addEventListener("change", e => {
     if(!e.target.matches(".gui__input_radio")) {
@@ -313,9 +285,8 @@ function syncControlValues(sourceControl, targetControl) {
     document.getElementById(targetControl).value = document.getElementById(sourceControl).value;
 }
 
-// ---------------------------------------------------
-// ------ fine-tuning range and number elements ------
-// ---------------------------------------------------
+
+
 
 
 function startDragging(e, callback) {

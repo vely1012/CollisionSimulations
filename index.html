@@ -14,17 +14,6 @@
 </head>
 
 <body>
-    <!--
-    
-    suggestions & ideas:
-    - partial application of changes
-    - not just number inputs, but range+number combo
-    - callbacks are being attached uncontrolably
-    - add missing functionality (like saving or (what else is missing btw))
-    - sync parameters changes with controls panel (Bubbles generation settings at least)
-
-    -->
-
     <section class="gui" id="gui" style="--color: #0002;">
         <h2 class="gui__title gui__ribbon unselectable" title="click to pin/unpin the controls pannel"
             onclick="document.getElementById('gui').classList.toggle('gui_locked')">controls</h2>
@@ -52,25 +41,25 @@
 
             <label for="maxD" class="gui__label">Max diameter</label>
             <div class="gui__inner-flex">
-                <input type="range" id="maxDRange" class="gui__input gui__input_range" min="10" max="100" step="1" value="30"
+                <input type="range" id="maxDRange" class="gui__input gui__input_range" min="1" max="200" step="1" value="30"
                     onmousewheel />
-                <input type="number" id="maxD" class="gui__input gui__input_number" min="10" max="100" step="1" value="30"
+                <input type="number" id="maxD" class="gui__input gui__input_number" min="1" max="200" step="1" value="30"
                     onmousewheel />
             </div>
 
             <label for="minD" class="gui__label">Min diameter</label>
             <div class="gui__inner-flex">
-                <input type="range" id="minDRange" class="gui__input gui__input_range" min="10" max="100" step="1" value="70"
+                <input type="range" id="minDRange" class="gui__input gui__input_range" min="1" max="300" step="1" value="30"
                     onmousewheel />
-                <input type="number" id="minD" class="gui__input gui__input_number" min="10" max="100" step="1" value="70"
+                <input type="number" id="minD" class="gui__input gui__input_number" min="1" max="300" step="1" value="30"
                     onmousewheel />
             </div>
 
             <label for="amountOfBubbles" class="gui__label">Amount of bubbles</label>
             <div class="gui__inner-flex">
-                <input type="range" id="amountOfBubblesRange" class="gui__input gui__input_range" min="1" max="1000" step="1"
+                <input type="range" id="amountOfBubblesRange" class="gui__input gui__input_range" min="1" max="300" step="1"
                     value="1" onmousewheel />
-                <input type="number" id="amountOfBubbles" class="gui__input gui__input_number" min="1" max="1000" step="1"
+                <input type="number" id="amountOfBubbles" class="gui__input gui__input_number" min="1" max="300" step="1"
                     value="1" onmousewheel />
             </div>
         </div>
@@ -79,14 +68,10 @@
 
             <h4 class="gui__mini-title gui__spread">Current simulation:</h4>
             <div class="gui__inner-grid gui__spread">
-                <!-- <input class="gui__input gui__input_radio" type="radio" name="currentSim" id="swtichSimFss"
-                    onchange="controlFuncs['a']()" checked /> -->
                 <input class="gui__input gui__input_radio" type="radio" name="currentSim" id="swtichSimFss"
                     onchange="switchSimulationFocus()" checked />
                 <label for="swtichSimFss" class="gui__label">Full-search simulation</label>
                 
-                <!-- <input class="gui__input gui__input_radio" type="radio" name="currentSim" id="swtichSimQts"
-                onchange="controlFuncs['a']()" /> -->
                 <input class="gui__input gui__input_radio" type="radio" name="currentSim" id="swtichSimQts"
                 onchange="switchSimulationFocus()" />
                 <label for="swtichSimQts" class="gui__label">Quad tree simulation</label>
@@ -103,31 +88,27 @@
             </div>
 
             <label for="ConstantCycleTime" class="gui__label">constant cycle time</label>
-            <!-- <input type="checkbox" id="ConstantCycleTime" class="gui__input gui__input_checkbox"
-                onchange="controlFuncs['v']()" checked /> -->
             <input type="checkbox" id="ConstantCycleTime" class="gui__input gui__input_checkbox"
                 onchange="toggleConstantCycleTime()" checked />
 
             <div class="gui__inner-flex gui__spread" style="margin-top: 10px">
-                <!-- <label for="ToggleRun" class="gui__label">run/stop</label> -->
-                <input value="run/stop" type="button" id="ToggleRun" class="gui__input gui__input_button" onclick="controlFuncs[' ']()" />
+                <input value="stop" type="button" id="togglePlayStop" class="gui__input gui__input_button" onclick="togglePlayStop()" />
     
-                <!-- <label for="Restart" class="gui__label">restart</label> -->
-                <input value="restart" type="button" id="Restart" class="gui__input gui__input_button" onclick="controlFuncs['x']()" />
+                <input value="restart" type="button" id="restartSimulation" class="gui__input gui__input_button" onclick="restartSimulation()" />
     
-                <!-- <label for="QuickRestart" class="gui__label">quick restart</label> -->
-                <input value="quick restart" type="button" id="QuickRestart" class="gui__input gui__input_button" onclick="controlFuncs['q']()" />
+                <input value="quick restart" type="button" id="quickRestartSimulation" class="gui__input gui__input_button" onclick="quickRestartSimulation()" />
     
-                <!-- <label for="Rewind" class="gui__label">rewind</label> -->
-                <input value="rewind" type="button" id="Rewind" class="gui__input gui__input_button" onclick="controlFuncs['r']()" />
-    
-                <!-- <label for="IterateForward" class="gui__label">one cycle forwards</label> -->
-                <input value="one cycle forwards" type="button" id="IterateForward" class="gui__input gui__input_button"
-                    onclick="controlFuncs['i']()" />
-    
-                <!-- <label for="IterateBackward" class="gui__label">one cycle backwards</label> -->
-                <input value="one cycle backwards" type="button" id="IterateBackward" class="gui__input gui__input_button"
-                    onclick="controlFuncs['I']()" />
+                <input value="rewind" type="button" id="rewindSimulation" class="gui__input gui__input_button" onclick="rewindSimulation()" />
+                
+                <input value="one cycle forwards" type="button" id="iterateSimulation" class="gui__input gui__input_button"
+                onclick="iterateSimulation()" />
+                
+                <input value="one cycle backwards" type="button" id="iterateSimulationReverse" class="gui__input gui__input_button"
+                onclick="iterateSimulationReverse()" />
+
+                <input value="save" type="button" id="saveSimulationState" class="gui__input gui__input_button" onclick="saveSimulationState()" />
+                <input value="load" type="button" id="loadSimulationState" class="gui__input gui__input_button" onclick="loadSimulationState()" />
+                <input value="start autosave" type="button" id="toggleAutoSave" class="gui__input gui__input_button" onclick="currentSimulation.autosaveIntervalId ? stopAutoSave() : startAutoSave()" />
             </div>
 
         </div>
@@ -179,7 +160,7 @@
         
         let fullSearchBubbles = '';
         let quadTreeBubbles = '';
-        const n = 1000;
+        const n = 300;
         for (let i = 0; i < n; i++) {
             fullSearchBubbles += `<div class="bubble" id="${i}"></div>`;
             quadTreeBubbles += `<div class="bubble" id="${i}"></div>`;

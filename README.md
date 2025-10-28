@@ -12,7 +12,7 @@ An educational project aimed at studying collision simulation development in gen
 
 ## Functionality
 
-For better testing performance, a keyboard simulation control system was implemented. Currently it provides these features:
+Along with graphical user interface, keyboard simulation control system was implemented. Currently it provides these features:
 
 | Function | Key | Memorization Hint |
 |----------|-----|-----------|
@@ -32,7 +32,7 @@ For better testing performance, a keyboard simulation control system was impleme
 | Decrease focused simulation speed | ArrowDown | slow down |
 | Rewind | r | rewind |
 
-Using the browser's developer console allows for more complex manipulations with simulations, such as loading predefined bubble samples (which were discovered/created during development), influencing bubble generation, or attaching `EndCycleActions` for demonstration purposes. Check the [script.js](./script.js) file to learn about these features and how to use them. 
+Using the browser's developer console allows for more complex manipulations with simulations, such as loading predefined bubble samples (which were discovered/created during development), influencing bubble generation or attaching multiple *End cycle actions*
 
 ## Overcome Challenges
 
@@ -96,18 +96,8 @@ Multiple times throughout the project development, I had to refactor the code: a
 
 Some of this process is documented by this exported Cursor [chat](./cursor_chats/cursor_refactor_simulations_js.md).
 
-### Enhancing accessibility
-
-???????
-
-Up to the final steps of implementing actual functionality, I have beein assuming that people who would like to familiarise themselves with the project will probably have enough technical knowledge to do so. Interacting with simulations through keyboard and developer console seemed appropriate to me. But willing to make the project as user-friendly as possible and potential challenges on the way to it made me reconsider
-
-That's how two main UI elements - control and logs pannels - were added. 
-
-???????
-
 ## Results
 
 - A quad tree data structure and more optimal collision simulation based on it were implemented
-- Results of the simulations performance comparison confirm the superiority of the quad tree approach
 - I've deepened my knowledge of fundamental front-end technologies and DSA
+- Unfortunately, results of the simulations performance comparison do not confirm the superiority of the quad tree approach: both simulations run equaly fast

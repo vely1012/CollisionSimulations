@@ -294,9 +294,9 @@ body {
 }
 
 .gui__input_button {
-    /* width: 50px; */
     background-color: #32a553;
     color: #0f0;
+    flex-basis: 30%;
 }
 /* .gui__input_button:hover,  */
 .gui__input_button:active {
