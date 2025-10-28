@@ -3,8 +3,7 @@ class CollisionSimulation {
         baseVelocity: 50,
         maxD: 30,
         maxD: 70,
-        bubbleHue: null,
-        render: true,
+        hue: 0,
         randomisePositions: true,
         amountOfBubbles: 1
     }
@@ -41,7 +40,22 @@ class CollisionSimulation {
         }
     }
 
+    cleanBubbles() {
+        for(let b of this.bubblesWindowElement.children) {
+            b.style.cssText = "";
+        }
+    }
+
+    tintBubbles(hue) {
+        const hueChanger = () => hue;
+        for(let b of this.bubbles) {
+            b.changeHue(hueChanger);
+        }
+    }
+
     generateBubbles(generatingSettings) {
+        this.cleanBubbles();
+
         const bubbles = [];
 
         const bubbleElements = Array.from(this.bubblesWindowElement.querySelectorAll('.bubble')).splice(0, generatingSettings.amountOfBubbles);
@@ -76,15 +90,14 @@ class CollisionSimulation {
             const ball = new Ball(bubbleId, ballX, ballY, randomD, ballVelocity, hue, this.bubblesWindowElement);
 
             bubbles.push(ball);
-            if (this.generatingSettings.render) {
-                ball.render();
-            }
+            ball.render();
         }
 
         this.bubbles = bubbles;
     }
 
     loadBubbles(stringifiedBubbles) {
+        this.cleanBubbles();
         this.bubbles = stringifiedBubbles.map(bubbleString => Ball.FromJSONString(bubbleString, this.bubblesWindowElement));
         this.bubbles.map(b => b.render())
     }
@@ -106,7 +119,7 @@ class CollisionSimulation {
     }
 
     // Abstract method - must be implemented by subclasses
-    doCycle(constantCycleTime = this.constantCycleTime) {
+    doCycle() {
         throw new Error("doCycle method must be implemented by subclass");
     }
 
@@ -129,7 +142,7 @@ class CollisionSimulation {
 
         this.simulationSpeed *= di;
         for(let i = 0; i != n; i += di) {
-            this.doCycle(true);
+            this.doCycle();
             this.moveBubbles();
         }
         this.simulationSpeed /= di;
@@ -251,13 +264,13 @@ class CollisionSimulation {
 }
 
 class FullSearchSimulation extends CollisionSimulation {
-    doCycle(constantCycleTime = this.constantCycleTime) {
-        if (!constantCycleTime) {
+    doCycle() {
+        if (!this.constantCycleTime) {
             const currentCycleTime = new Date();
             this.lastCycleDuration = currentCycleTime.getTime() - this.lastCycleTime.getTime();
             this.lastCycleTime = currentCycleTime;
         } else {
-            this.lastCycleDuration = 17;
+            this.lastCycleDuration = 6.5;
         }
 
         this.bubbles.forEach((b1, i) => {
@@ -284,7 +297,8 @@ class QuadTreeSimulation extends CollisionSimulation {
         this.rect = { x: 0, y: 0, w: this.maxLeft, h: this.maxTop };
 
         // Yet to improve
-        this.maxBubbles = maxBubbles || Math.ceil(Math.log(this.bubbles.length) / Math.log(4));
+        this.maxBubbles = 1;
+        // this.maxBubbles = maxBubbles || Math.ceil(Math.log(this.bubbles.length) / Math.log(4));
         // this.maxBubbles = Math.pow(2, 2 * Math.ceil(Math.log(this.bubbles.length / maxBubbles) / Math.log(2)));
         
         this.quadTree = null;
@@ -306,7 +320,7 @@ class QuadTreeSimulation extends CollisionSimulation {
             this.lastCycleDuration = currentCycleTime.getTime() - this.lastCycleTime.getTime();
             this.lastCycleTime = currentCycleTime;
         } else {
-            this.lastCycleDuration = 17;
+            this.lastCycleDuration = 6.5;
         }
 
         this.quadTree = new QuadTree(this.bubbles, this.rect, this.maxBubbles);
@@ -317,5 +331,157 @@ class QuadTreeSimulation extends CollisionSimulation {
         });
 
         this.lastCycleTime = new Date();
+    }
+}
+
+// Additional debugging and illustrating utility
+class EndCycleActions {
+    static _framePropByRect(rect, color, thickness) {
+        const { x, y, w, h } = rect;
+
+        let styleProp = `linear-gradient(${color}, ${color}) ${x}px ${y}px / calc(${w}px + ${thickness}px) ${thickness}px no-repeat,
+                         linear-gradient(${color}, ${color}) ${x}px ${y}px / ${thickness}px calc(${h}px + ${thickness}px) no-repeat,
+                         linear-gradient(${color}, ${color}) calc(${x}px - ${thickness}px) calc(${h}px + ${y}px - ${thickness}px) / calc(${w}px + ${thickness}px) ${thickness}px no-repeat,
+                         linear-gradient(${color}, ${color}) calc(${w}px + ${x}px - ${thickness}px) calc(${y}px - ${thickness}px) / ${thickness}px calc(${h}px + ${thickness}px) no-repeat`;
+
+        return styleProp;
+    }
+
+    static cleanSimulationBackground(sim) { sim.bubblesWindowElement.style.setProperty('background', ''); }
+
+    static logSystemsEnergy(sim) {
+        let totalEnergy = 0;
+        sim.bubbles.forEach(b => {
+            const mass = Math.PI * b.d ** 2 / 4;
+            totalEnergy += mass * (b.velocity.x ** 2 + b.velocity.y ** 2) / 2;
+        })
+        console.log(totalEnergy);
+    }
+
+    static _logAvgCycleFactory(sim, maxCyclesToConsider=100) {
+        let cycleTimes = [];
+
+        return function () {
+            if(cycleTimes.length === maxCyclesToConsider) {
+                cycleTimes.shift();
+            }
+            cycleTimes.push(sim.lastCycleDuration);
+
+            console.log(cycleTimes.reduce((sum, e) => sum + e, 0) / cycleTimes.length);
+        };
+    }
+
+    static drawQuadTreeGrid(quadTreeSim) {
+        const quadTree = quadTreeSim.quadTree;
+        const canvasElement = quadTreeSim.bubblesWindowElement;
+        const color = '#7777';
+        const thickness = 3;
+
+        const frameProps = [];
+        (function recurrentScan(quadTree) {
+            frameProps.push(EndCycleActions._framePropByRect(quadTree.rect, color, thickness));
+            for (let side in quadTree.branches) {
+                const branch = quadTree.branches[side];
+                if (!branch) {
+                    continue;
+                }
+                recurrentScan(branch);
+            }
+        })(quadTree);
+
+        let currentBackground = canvasElement.style.getPropertyValue('background');
+        currentBackground = currentBackground ? "," + currentBackground : "";
+        canvasElement.style.setProperty('background', frameProps.join(',') + currentBackground);
+    }
+
+    static bubbleContactBranches(quadTreeSim) {
+        const canvasElement = quadTreeSim.bubblesWindowElement;
+        const b = quadTreeSim.bubbles[0];
+        const qt = quadTreeSim.quadTree;
+
+        const frameProps = [];
+
+        (function recurrentRectMarking(quadTree, bubble) {
+            const covers = quadTree.rect.covers(bubble);
+            const intersects = quadTree.rect.intersects(bubble);
+            const leaf = Object.is(quadTree.bubble, bubble);
+
+            if (!covers && !intersects) {
+                return;
+            }
+
+            if (covers) {
+                const col = leaf ? '#f00' : '#0c0';
+                frameProps.push(EndCycleActions._framePropByRect(quadTree.rect, col, 2));
+            }
+            if (intersects) {
+                frameProps.push(EndCycleActions._framePropByRect(quadTree.rect, '#00f', 2));
+            }
+
+            if (leaf) {
+                return;
+            }
+
+            for (let side in quadTree.branches) {
+                if (!quadTree.branches[side]) {
+                    continue;
+                }
+                recurrentRectMarking(quadTree.branches[side], bubble);
+            }
+        })(qt, b);
+
+        frameProps.reverse();
+        let currentBackground = canvasElement.style.getPropertyValue('background');
+        currentBackground = currentBackground ? "," + currentBackground : "";
+        canvasElement.style.setProperty('background', frameProps.join(',') + currentBackground);
+    }
+
+    static markClosestBubbles(quadTreeSim, targetBubble, markHue = '0') {
+        const b1 = targetBubble;
+        const qts = quadTreeSim;
+
+        const branchFilter = QuadTreeSimulation.branchFilter;
+        const leafFilter = QuadTreeSimulation.leafFilter;
+
+        const collisionOffset = b1.d !== qts.maxD ? qts.maxD : qts.submaxD;
+        const collisionArea = { x: b1.x, y: b1.y, d: b1.d + collisionOffset };
+
+        b1.element.style.setProperty('outline', '2px solid black');
+        b1.element.style.setProperty('outline-offset', `${collisionOffset / 2}px`);
+
+        const b2s = qts.quadTree.customQuery(collisionArea, branchFilter, leafFilter);
+        b2s?.forEach(b2 => {
+            if(Object.is(b1, b2)) {
+                return;
+            }
+            // save previous value to be able to restore it in unmarkBubbles
+            const initialHue = b2.element.style.getPropertyValue('--hue');
+            b2.element.style.setProperty('--hue-init', initialHue);
+
+            b2.element.style.setProperty('--hue', markHue);
+        });
+    }
+
+    static markCustomQueryBubbles(quadTreeSim, targetBubble, branchFilter=null, leafFilter=null, markHue = '270') {
+        branchFilter ||= QuadTreeSimulation.branchFilter;
+        leafFilter ||= QuadTreeSimulation.leafFilter;
+
+        const bubblesToMark = quadTreeSim.quadTree.customQuery(targetBubble, branchFilter, leafFilter);
+        bubblesToMark?.forEach(b2 => {
+            const initialHue = b2.element.style.getPropertyValue('--hue');
+            b2.element.style.setProperty('--hue-init', initialHue);
+
+            b2.element.style.setProperty('--hue', markHue);
+        });
+    }
+
+    static unmarkBubbles(quadTreeSim) {
+        quadTreeSim.bubbles.forEach(b => {
+            const initialCol = b.element.style.getPropertyValue('--hue-init');
+            if (!initialCol) {
+                return;
+            }
+            b.element.style.setProperty('--hue', initialCol);
+        });
     }
 }

@@ -96,6 +96,16 @@ Multiple times throughout the project development, I had to refactor the code: a
 
 Some of this process is documented by this exported Cursor [chat](./cursor_chats/cursor_refactor_simulations_js.md).
 
+### Enhancing accessibility
+
+???????
+
+Up to the final steps of implementing actual functionality, I have beein assuming that people who would like to familiarise themselves with the project will probably have enough technical knowledge to do so. Interacting with simulations through keyboard and developer console seemed appropriate to me. But willing to make the project as user-friendly as possible and potential challenges on the way to it made me reconsider
+
+That's how two main UI elements - control and logs pannels - were added. 
+
+???????
+
 ## Results
 
 - A quad tree data structure and more optimal collision simulation based on it were implemented

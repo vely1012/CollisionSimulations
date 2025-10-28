@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Collision simulations</title>
-    <script src="structures.js"></script>
-    <script src="simulations.js"></script>
+    <script src="./js/core/structures.js"></script>
+    <script src="./js/core/simulations.js"></script>
+    <script src="./js/bubblesSamples.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="shortcut icon"
         href="data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cmask id='path-1-inside-1_12_13' fill='white'%3E%3Cpath d='M168.5 142L148 144.5L158 184L121.257 143.234C128.412 139.752 134.561 134.527 139.153 128.11L168.5 142ZM62.5 47.5L66 16L81.0498 57.1523C71.7878 61.3147 64.103 68.359 59.1328 77.1426L24.5 70L44.5 61.5L27 11.5L62.5 47.5Z'/%3E%3C/mask%3E%3Cpath d='M168.5 142L148 144.5L158 184L121.257 143.234C128.412 139.752 134.561 134.527 139.153 128.11L168.5 142ZM62.5 47.5L66 16L81.0498 57.1523C71.7878 61.3147 64.103 68.359 59.1328 77.1426L24.5 70L44.5 61.5L27 11.5L62.5 47.5Z' fill='%23BB5050'/%3E%3Cpath d='M168.5 142L168.863 144.978L179.153 143.723L169.783 139.288L168.5 142ZM148 144.5L147.637 141.522L144.256 141.934L145.092 145.236L148 144.5ZM158 184L155.772 186.009L160.908 183.264L158 184ZM121.257 143.234L119.944 140.537L116.359 142.281L119.028 145.243L121.257 143.234ZM139.153 128.11L140.437 125.399L138.172 124.327L136.714 126.365L139.153 128.11ZM62.5 47.5L60.3639 49.6064L64.7861 54.091L65.4817 47.8313L62.5 47.5ZM66 16L68.8175 14.9696L63.0183 15.6687L66 16ZM81.0498 57.1523L82.2795 59.8887L84.8263 58.7442L83.8673 56.122L81.0498 57.1523ZM59.1328 77.1426L58.5269 80.0807L60.6674 80.5222L61.7438 78.62L59.1328 77.1426ZM24.5 70L23.3266 67.239L14.4834 70.9973L23.894 72.9382L24.5 70ZM44.5 61.5L45.6734 64.261L48.26 63.1617L47.3316 60.5089L44.5 61.5ZM27 11.5L29.1361 9.39357L24.1684 12.4911L27 11.5ZM168.5 142L168.137 139.022L147.637 141.522L148 144.5L148.363 147.478L168.863 144.978L168.5 142ZM148 144.5L145.092 145.236L155.092 184.736L158 184L160.908 183.264L150.908 143.764L148 144.5ZM158 184L160.228 181.991L123.485 141.226L121.257 143.234L119.028 145.243L155.772 186.009L158 184ZM121.257 143.234L122.57 145.932C130.178 142.23 136.713 136.676 141.593 129.856L139.153 128.11L136.714 126.365C132.41 132.379 126.647 137.275 119.944 140.537L121.257 143.234ZM139.153 128.11L137.87 130.822L167.217 144.712L168.5 142L169.783 139.288L140.437 125.399L139.153 128.11ZM62.5 47.5L65.4817 47.8313L68.9817 16.3313L66 16L63.0183 15.6687L59.5183 47.1687L62.5 47.5ZM66 16L63.1825 17.0304L78.2323 58.1827L81.0498 57.1523L83.8673 56.122L68.8175 14.9696L66 16ZM81.0498 57.1523L79.8201 54.416C69.9715 58.8419 61.8046 66.3292 56.5218 75.6652L59.1328 77.1426L61.7438 78.62C66.4014 70.3888 73.604 63.7874 82.2795 59.8887L81.0498 57.1523ZM59.1328 77.1426L59.7388 74.2044L25.106 67.0618L24.5 70L23.894 72.9382L58.5269 80.0807L59.1328 77.1426ZM24.5 70L25.6734 72.761L45.6734 64.261L44.5 61.5L43.3266 58.739L23.3266 67.239L24.5 70ZM44.5 61.5L47.3316 60.5089L29.8316 10.5089L27 11.5L24.1684 12.4911L41.6684 62.4911L44.5 61.5ZM27 11.5L24.8639 13.6064L60.3639 49.6064L62.5 47.5L64.6361 45.3936L29.1361 9.39357L27 11.5Z' fill='white' mask='url(%23path-1-inside-1_12_13)'/%3E%3Ccircle cx='118' cy='85' r='40' fill='%23D9D9D9'/%3E%3Ccircle cx='118' cy='85' r='33' fill='%23BB5050'/%3E%3Ccircle cx='83' cy='115' r='40' fill='%23D9D9D9'/%3E%3Ccircle cx='83' cy='115' r='33' fill='%23BB5050'/%3E%3C/svg%3E%0A"
@@ -13,15 +14,182 @@
 </head>
 
 <body>
-    <section class="bubble-simulation" id="full-search-sim">
-        <h2 class="bubble-simulation__heading">full search</h2>
-        <div class="bubbles-window" style="--frame-col: blue;"></div>
+    <!--
+    
+    suggestions & ideas:
+    - partial application of changes
+    - not just number inputs, but range+number combo
+    - callbacks are being attached uncontrolably
+    - add missing functionality (like saving or (what else is missing btw))
+    - sync parameters changes with controls panel (Bubbles generation settings at least)
+
+    -->
+
+    <section class="gui" id="gui" style="--color: #0002;">
+        <h2 class="gui__title gui__ribbon unselectable" title="click to pin/unpin the controls pannel"
+            onclick="document.getElementById('gui').classList.toggle('gui_locked')">controls</h2>
+        <div class="gui__section" id="bubbleGenerationSettings">
+            <h3 class="gui__sub-title gui__spread">Bubbles generation settings</h3>
+            
+            <label for="randomisePositions" class="gui__label">Randomise positions</label>
+            <input type="checkbox" id="randomisePositions" class="gui__input gui__input_checkbox" checked />
+            
+
+            <label for="hue" class="gui__label">Hue</label>
+            <div class="gui__inner-flex">
+                <div class="gui__input gui__input_range gui__input_hue-picker" id="hueRange" style="--hue: 220;"></div>
+                <input type="number" id="hue" class="gui__input gui__input_number" min="0" max="360" step="1" value="0"
+                    onmousewheel="document.getElementById('hueRange').style.setProperty('--hue', document.getElementById('hue').value)" />
+            </div>
+
+            <label for="baseVelocity" class="gui__label">Base velocity</label>
+            <div class="gui__inner-flex">
+                <input type="range" id="baseVelocityRange" class="gui__input gui__input_range" min="1" max="500" step="1"
+                    value="50" onmousewheel />
+                <input type="number" id="baseVelocity" class="gui__input gui__input_number" min="1" max="500" step="1"
+                    value="50" onmousewheel />
+            </div>
+
+            <label for="maxD" class="gui__label">Max diameter</label>
+            <div class="gui__inner-flex">
+                <input type="range" id="maxDRange" class="gui__input gui__input_range" min="10" max="100" step="1" value="30"
+                    onmousewheel />
+                <input type="number" id="maxD" class="gui__input gui__input_number" min="10" max="100" step="1" value="30"
+                    onmousewheel />
+            </div>
+
+            <label for="minD" class="gui__label">Min diameter</label>
+            <div class="gui__inner-flex">
+                <input type="range" id="minDRange" class="gui__input gui__input_range" min="10" max="100" step="1" value="70"
+                    onmousewheel />
+                <input type="number" id="minD" class="gui__input gui__input_number" min="10" max="100" step="1" value="70"
+                    onmousewheel />
+            </div>
+
+            <label for="amountOfBubbles" class="gui__label">Amount of bubbles</label>
+            <div class="gui__inner-flex">
+                <input type="range" id="amountOfBubblesRange" class="gui__input gui__input_range" min="1" max="1000" step="1"
+                    value="1" onmousewheel />
+                <input type="number" id="amountOfBubbles" class="gui__input gui__input_number" min="1" max="1000" step="1"
+                    value="1" onmousewheel />
+            </div>
+        </div>
+        <div class="gui__section" id="simulationsControlPanel">
+            <h3 class="gui__sub-title gui__spread">Simulations control panel</h3>
+
+            <h4 class="gui__mini-title gui__spread">Current simulation:</h4>
+            <div class="gui__inner-grid gui__spread">
+                <!-- <input class="gui__input gui__input_radio" type="radio" name="currentSim" id="swtichSimFss"
+                    onchange="controlFuncs['a']()" checked /> -->
+                <input class="gui__input gui__input_radio" type="radio" name="currentSim" id="swtichSimFss"
+                    onchange="switchSimulationFocus()" checked />
+                <label for="swtichSimFss" class="gui__label">Full-search simulation</label>
+                
+                <!-- <input class="gui__input gui__input_radio" type="radio" name="currentSim" id="swtichSimQts"
+                onchange="controlFuncs['a']()" /> -->
+                <input class="gui__input gui__input_radio" type="radio" name="currentSim" id="swtichSimQts"
+                onchange="switchSimulationFocus()" />
+                <label for="swtichSimQts" class="gui__label">Quad tree simulation</label>
+            </div>
+            
+            
+            <label for="Speed" class="gui__label">simulation speed</label>
+            
+            <div class="gui__inner-flex">
+                <input type="range" id="simulationSpeedRange" class="gui__input gui__input_range" min="-10" max="10" step="0.1" value="5"
+                    onmousewheel />
+                <input type="number" id="simulationSpeed" class="gui__input gui__input_number" min="-10" max="10" step="0.1" value="5"
+                    onmousewheel />
+            </div>
+
+            <label for="ConstantCycleTime" class="gui__label">constant cycle time</label>
+            <!-- <input type="checkbox" id="ConstantCycleTime" class="gui__input gui__input_checkbox"
+                onchange="controlFuncs['v']()" checked /> -->
+            <input type="checkbox" id="ConstantCycleTime" class="gui__input gui__input_checkbox"
+                onchange="toggleConstantCycleTime()" checked />
+
+            <div class="gui__inner-flex gui__spread" style="margin-top: 10px">
+                <!-- <label for="ToggleRun" class="gui__label">run/stop</label> -->
+                <input value="run/stop" type="button" id="ToggleRun" class="gui__input gui__input_button" onclick="controlFuncs[' ']()" />
+    
+                <!-- <label for="Restart" class="gui__label">restart</label> -->
+                <input value="restart" type="button" id="Restart" class="gui__input gui__input_button" onclick="controlFuncs['x']()" />
+    
+                <!-- <label for="QuickRestart" class="gui__label">quick restart</label> -->
+                <input value="quick restart" type="button" id="QuickRestart" class="gui__input gui__input_button" onclick="controlFuncs['q']()" />
+    
+                <!-- <label for="Rewind" class="gui__label">rewind</label> -->
+                <input value="rewind" type="button" id="Rewind" class="gui__input gui__input_button" onclick="controlFuncs['r']()" />
+    
+                <!-- <label for="IterateForward" class="gui__label">one cycle forwards</label> -->
+                <input value="one cycle forwards" type="button" id="IterateForward" class="gui__input gui__input_button"
+                    onclick="controlFuncs['i']()" />
+    
+                <!-- <label for="IterateBackward" class="gui__label">one cycle backwards</label> -->
+                <input value="one cycle backwards" type="button" id="IterateBackward" class="gui__input gui__input_button"
+                    onclick="controlFuncs['I']()" />
+            </div>
+
+        </div>
+        <div class="gui__section" id="EndCycleCallbacks">
+            <h3 class="gui__sub-title gui__spread">End cycle actions</h3>
+
+            <input class="gui__input gui__input_radio" type="radio" name="callbacks" id="0" checked />
+            <label for="0" class="gui__label">No action</label>
+
+            <input class="gui__input gui__input_radio" type="radio" name="callbacks" id="1" />
+            <label for="1" class="gui__label">Log avg. full-search simulation cycle time</label>
+
+            <input class="gui__input gui__input_radio" type="radio" name="callbacks" id="2" disabled>
+            <label for="2" class="gui__label">Log avg. quad tree simulation cycle time</label>
+
+            <input class="gui__input gui__input_radio" type="radio" name="callbacks" id="3">
+            <label for="3" class="gui__label">Log full-search simulation total kinetic energy</label>
+
+            <input class="gui__input gui__input_radio" type="radio" name="callbacks" id="4" disabled>
+            <label for="4" class="gui__label">Log quad tree simulation total kinetic energy</label>
+
+            <input class="gui__input gui__input_radio" type="radio" name="callbacks" id="5" disabled>
+            <label for="5" class="gui__label">Draw quad tree structure</label>
+
+            <input class="gui__input gui__input_radio" type="radio" name="callbacks" id="6" disabled>
+            <label for="6" class="gui__label">Highlight branches that contain/intersect with bubble</label>
+
+            <input class="gui__input gui__input_radio" type="radio" name="callbacks" id="7" disabled>
+            <label for="7" class="gui__label">Mark closest bubbles</label>
+        </div>
     </section>
-    <section class="bubble-simulation" id="quad-tree-sim">
-        <h2 class="bubble-simulation__heading">quad tree variation</h2>
-        <div class="bubbles-window" style="--frame-col: red;"></div>
+    <section class="logging" id="logging">
+        <span class="logging__ribbon unselectable" title="click to pin/unpin the logs pannel"
+            onclick="document.getElementById('logging').classList.toggle('logging_locked');">logs</span>
+        <textarea class="logging__textarea" id="log-area"></textarea>
     </section>
-    <script src="script.js" defer></script>
+    <main class="sims-wrapper">
+        <section class="bubble-simulation" id="full-search-sim">
+            <h2 class="bubble-simulation__heading">full search</h2>
+            <div class="bubbles-window" style="--frame-col: blue;"></div>
+        </section>
+        <section class="bubble-simulation" id="quad-tree-sim">
+            <h2 class="bubble-simulation__heading">quad tree variation</h2>
+            <div class="bubbles-window" style="--frame-col: red;"></div>
+        </section>
+    </main>
+    <script defer>
+        // Populate bubble-window elements with bubbles
+        
+        let fullSearchBubbles = '';
+        let quadTreeBubbles = '';
+        const n = 1000;
+        for (let i = 0; i < n; i++) {
+            fullSearchBubbles += `<div class="bubble" id="${i}"></div>`;
+            quadTreeBubbles += `<div class="bubble" id="${i}"></div>`;
+        }
+        document.getElementById('full-search-sim').querySelector('.bubbles-window').innerHTML = fullSearchBubbles;
+        document.getElementById('quad-tree-sim').querySelector('.bubbles-window').innerHTML = quadTreeBubbles;
+    </script>
+    <script src="./js/textareaLogging.js" defer></script>
+    <script src="./js/controls.js" defer></script>
+    <script src="./js/main.js" defer></script>
 </body>
 
 </html>
